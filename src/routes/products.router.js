@@ -3,41 +3,45 @@ import { ProductsModel } from '../model/products.model.js';
 
 const app = Router();
 
-// Listar todos los productos de products.json
+// Listar todos los productos de la BBDD
 app.get('/', async (req, res) => {
     try {
-
         const { limit = 10, page = 1, sort = '', query = '' } = req.query;
-
-        let filter = {};
+        let filter = {
+            $and: [
+                { status: true }, // Disponibilidad siempre en true.
+                { categoria: { $regex: query, $options: 'i' } } // Siempre busca por categoría.
+            ]
+        };
+        
         if (query) {
+            // Ajusta el filtro para que también busque por título, descripción o código si se proporciona un término de búsqueda.
             filter = {
-                $or: [
-                    { title: { $regex: query, $options: 'i' } },
-                    { description: { $regex: query, $options: 'i' } },
-                    { code: { $regex: query, $options: 'i' } },
-                    { categoria: { $regex: query, $options: 'i' } }
+                $and: [
+                    { status: true },
+                    { $or: [
+                        { title: { $regex: query, $options: 'i' } },
+                        { description: { $regex: query, $options: 'i' } },
+                        { code: { $regex: query, $options: 'i' } },
+                        { categoria: { $regex: query, $options: 'i' } }
+                    ]}
                 ]
             };
         }
-
+        
         const sortOrden = {
             'asc': 1,
             'desc': -1
-        }
-
+        };
         const options = {
             page: Number(page),
             limit: Number(limit),
             ...(sort && { sort: { price: sortOrden[sort] } })
         };
-
         const result = await ProductsModel.paginate(filter, options);
-
         const linkPage = (page) => {
             return `/api/products?limit=${limit}&page=${page}&sort=${sort}&query=${query}`;
         };
-
         res.status(200).json({
             status: 'success',
             payload: result.docs,
@@ -50,15 +54,12 @@ app.get('/', async (req, res) => {
             prevLink: result.hasPrevPage ? linkPage(result.prevPage) : null,
             nextLink: result.hasNextPage ? linkPage(result.nextPage) : null
         });
-
-
     } catch (error) {
         res.status(500).json({ status: 'Error.', message: 'Error fetching products', error });
     }
-
 });
 
-//  Añadir producto a products.json
+//  Añadir producto a BBDDD
 app.post('/', async (req, res) => {
     const { title, description, code, price, stock, categoria } = req.body;
     let { status, thumbnails } = req.body;
@@ -74,16 +75,15 @@ app.post('/', async (req, res) => {
     }
 
     try {
-        await ProductsModel.create({ title, description, code, price, status, stock, categoria, thumbnails });
-        res.status(201).json({ mensaje: "Producto añadido." });
+        let newProducto = await ProductsModel.create({ title, description, code, price, status, stock, categoria, thumbnails });
+        res.status(201).json({ mensaje: "Producto añadido.", producto: newProducto });
     } catch (error) {
-        console.error('Error al agregar el producto:', error);
         res.status(500).json({ error: 'Error al agregar el producto. Puede ser que este queriendo duplicar el "code" y es único.' });
     }
-})
+});
 
 
-
+// Buscar un producto por id.
 app.get('/:id', async (req, res) => {
     const { id } = req.params;
 
@@ -96,12 +96,12 @@ app.get('/:id', async (req, res) => {
             res.status(404).json({ error: `No se encontró un producto con ID ${id}` });
         }
     } catch (error) {
-        console.error('Error al obtener el producto:', error);
+
         res.status(500).json({ error: 'Error al obtener el producto' });
     }
-})
+});
 
-// Actualizar un producto según ID en products.json
+// Actualizar un producto según ID en BBDD
 app.put('/:id', async (req, res) => {
     const { id } = req.params;
     const { title, description, code, price, stock, categoria } = req.body;
@@ -150,7 +150,7 @@ app.delete('/:id', async (req, res) => {
         const productoEliminado = await ProductsModel.findByIdAndDelete(id);
 
         if (productoEliminado) {
-            res.status(201).json({ message: `Producto con ID ${id} eliminado correctamente` });
+            res.status(201).json({ message: `Producto con ID ${id} eliminado correctamente.` });
         } else {
             res.status(404).json({ error: `No se encontró un producto con ID ${id}` });
         }

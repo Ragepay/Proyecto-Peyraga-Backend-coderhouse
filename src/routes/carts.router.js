@@ -7,7 +7,7 @@ const app = Router();
 app.get('/:id', async (req, res) => {
     const { id } = req.params;
     try {
-        const carrito = await CartsModel.findById(id);
+        const carrito = await CartsModel.findById(id).populate('products._id');
         if (carrito) {
             res.status(200).json({ status: "Success", payload: carrito });
         } else {
@@ -28,6 +28,7 @@ app.post('/', async (req, res) => {
         res.status(500).json({ error: 'Error al crear el carrito.' });
     }
 });
+
 
 // Ruta POST /:id/producto/:productId para agregar un producto a un carrito específico.
 app.post('/:id/products/:pid', async (req, res) => {
