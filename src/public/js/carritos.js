@@ -1,6 +1,7 @@
 let productos;
+const idCarrito = document.getElementById("id-carrito").textContent;
+
 document.addEventListener('DOMContentLoaded', async () => {
-    const idCarrito = document.getElementById("id-carrito").textContent;
     const url = 'http://localhost:8080/api/carts/' + idCarrito;
 
     try {
@@ -37,11 +38,52 @@ async function mostraProductosDelCarrito(arrayDeProductos) {
         cantidad.innerText = 'Cantidad: ' + element.quantity;
 
 
+        const botonMas = document.createElement('button');
+        botonMas.innerText = "Agregar";
+
+        //Click en el botonMas
+        botonMas.addEventListener('click', async () => {
+            const productId = element._id._id; // Usa el ID del producto
+            try {
+                await fetch('http://localhost:8080/api/carts/' + idCarrito + '/products/' + productId, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+
+            } catch (error) {
+                console.error('Error al agregar producto:', error);
+            }
+        });
+
+        const botonMenos = document.createElement('button');
+        botonMenos.innerText = "Borrar Producto del Carrito";
+        
+        //Click en el botonMas
+        botonMenos.addEventListener('click', async () => {
+            const productId = element._id; // Usa el ID del producto
+            const carritoId = input.value // Carrito ID.
+            try {
+                await fetch('http://localhost:8080/api/carts/' + carritoId + '/products/' + productId, {
+                    method: 'Delete',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+            } catch (error) {
+                console.error('Error al agregar producto:', error);
+            }
+        });
+
         div.appendChild(titulo);
         div.appendChild(descripcion);
         div.appendChild(categoria);
         div.appendChild(precio);
         div.appendChild(cantidad);
+        div.appendChild(botonMas);
+        div.appendChild(botonMenos);
         boxProducts.appendChild(div);
     });
 }
