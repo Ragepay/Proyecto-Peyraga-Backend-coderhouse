@@ -1,9 +1,8 @@
 let productos;
 const idCarrito = document.getElementById("id-carrito").textContent;
 
-document.addEventListener('DOMContentLoaded', async () => {
+async function hacerfetch() {
     const url = 'http://localhost:8080/api/carts/' + idCarrito;
-
     try {
         const response = await fetch(url);
         const data = await response.json();
@@ -13,10 +12,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Error al obtener datos:', error);
     }
     mostraProductosDelCarrito(productos)
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    hacerfetch()
 });
+
 
 async function mostraProductosDelCarrito(arrayDeProductos) {
     const boxProducts = document.getElementById('boxProducts'); // Asegúrate de que este ID exista en tu HTML
+    boxProducts.innerHTML = "";
 
 
     arrayDeProductos.forEach(element => {
@@ -56,17 +61,18 @@ async function mostraProductosDelCarrito(arrayDeProductos) {
             } catch (error) {
                 console.error('Error al agregar producto:', error);
             }
+            hacerfetch();
         });
 
         const botonMenos = document.createElement('button');
         botonMenos.innerText = "Borrar Producto del Carrito";
-        
+
         //Click en el botonMas
         botonMenos.addEventListener('click', async () => {
-            const productId = element._id; // Usa el ID del producto
-            const carritoId = input.value // Carrito ID.
+            const productId = element._id._id; // Usa el ID del producto
+
             try {
-                await fetch('http://localhost:8080/api/carts/' + carritoId + '/products/' + productId, {
+                await fetch('http://localhost:8080/api/carts/' + idCarrito + '/products/' + productId, {
                     method: 'Delete',
                     headers: {
                         'Content-Type': 'application/json'
@@ -75,6 +81,8 @@ async function mostraProductosDelCarrito(arrayDeProductos) {
             } catch (error) {
                 console.error('Error al agregar producto:', error);
             }
+
+            hacerfetch();
         });
 
         div.appendChild(titulo);
