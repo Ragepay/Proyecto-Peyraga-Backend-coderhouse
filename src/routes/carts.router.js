@@ -3,6 +3,20 @@ import { CartsModel } from '../model/carts.model.js';
 
 const app = Router();
 
+// Ruta GET para tarer todos los carritos con los productos
+app.get('/', async (req, res) => {
+    try {
+        const carrito = await CartsModel.find().populate('products._id');
+        if (carrito) {
+            res.status(200).json({ status: "Success", payload: carrito });
+        } else {
+            res.status(404).json({ error: `No se encontró un carrito con ID ${id}` });
+        }
+    } catch (error) {
+        res.status(500).json({ error: `No se encontró un carrito con ID ${id}` });
+    }
+});
+
 // Ruta GET /:id para listar los productos de un carrito específico
 app.get('/:id', async (req, res) => {
     const { id } = req.params;
